@@ -1,0 +1,78 @@
+# Geospatial ViT Training Configuration for Drone Imagery
+
+# Data settings
+data:
+  data_dir: "data/drone_samples"
+  img_size: 512  # Typical drone image size
+  patch_size: 16
+  in_channels: 3  # RGB
+  num_classes: 10  # Our 10 land cover classes
+  batch_size: 8    # Adjust based on M1 memory
+  num_workers: 2
+  bands: ['R', 'G', 'B']
+  use_geo: true   # Use GPS coordinates
+  train_split: 0.8
+
+# Model settings (ViT-Base sized)
+model:
+  embed_dim: 768
+  depth: 12
+  num_heads: 12
+  mlp_ratio: 4.0
+  dropout: 0.1
+  use_geo_encoding: true
+  num_geo_features: 3  # lat, lon, alt
+
+# Training settings
+training:
+  epochs: 50
+  lr: 0.001
+  weight_decay: 0.05
+  warmup_epochs: 5
+  save_interval: 5
+  mixed_precision: true  # Important for M1 performance
+  gradient_accumulation_steps: 2  # For larger effective batch size
+  early_stopping_patience: 10
+
+# Optimizer
+optimizer:
+  type: "adamw"
+  betas: [0.9, 0.999]
+  eps: 1e-8
+
+# Scheduler
+scheduler:
+  type: "cosine"
+  t_max: 50
+  eta_min: 1e-6
+
+# Data augmentation
+augmentation:
+  horizontal_flip: true
+  vertical_flip: true
+  random_rotate: true
+  random_crop: true
+  color_jitter: true
+  brightness_range: [0.8, 1.2]
+  contrast_range: [0.8, 1.2]
+
+# Logging
+logging:
+  use_wandb: false  # Set to true if you want to use Weights & Biases
+  wandb_project: "geospatial-vit-drone"
+  log_interval: 10
+  save_checkpoints: true
+  output_dir: "experiments/drone_training"
+  experiment_name: "drone_vit_512"
+  tensorboard: true
+
+# Validation
+validation:
+  interval: 1
+  metrics: ["accuracy", "f1_score", "precision", "recall"]
+
+# Hardware
+hardware:
+  device: "mps"  # Use MPS on Apple Silicon
+  precision: "mixed"  # Mixed precision for speed
+  memory_efficient: true
