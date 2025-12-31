@@ -1,0 +1,24 @@
+# Improved test configuration
+
+data_dir: "data/drone_samples"
+img_size: 128
+batch_size: 4
+num_classes: 10
+
+model:
+  embed_dim: 128
+  depth: 4
+  num_heads: 8
+  dropout: 0.3
+  use_geo_encoding: false
+
+training:
+  epochs: 10  # More epochs
+  lr: 0.001
+  weight_decay: 0.01
+  mixed_precision: true
+  save_interval: 2
+
+logging:
+  output_dir: "experiments/improved_test"
+  experiment_name: "improved_vit"

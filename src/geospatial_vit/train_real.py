@@ -26,9 +26,7 @@ class GeospatialViTTrainer:
             print("⚠ Using CPU (MPS not available)")
         
         # Get config values with flexible structure
-        # Handle both flat structure and nested structure
         if 'data' in self.config:
-            # Nested structure
             data_config = self.config['data']
             img_size = data_config.get('img_size', 224)
             patch_size = data_config.get('patch_size', 16)
@@ -37,7 +35,6 @@ class GeospatialViTTrainer:
             data_dir = data_config.get('data_dir', 'data/drone_samples')
             batch_size = data_config.get('batch_size', 8)
         else:
-            # Flat structure
             img_size = self.config.get('img_size', 224)
             patch_size = self.config.get('patch_size', 16)
             in_channels = self.config.get('in_channels', 3)
@@ -122,10 +119,12 @@ class GeospatialViTTrainer:
         with open(self.output_dir / 'config.yaml', 'w') as f:
             yaml.dump(self.config, f)
         
-        print(f"Model initialized with {sum(p.numel() for p in self.model.parameters()):,} parameters")
-        print(f"Output directory: {self.output_dir}")
-        print(f"Data directory: {self.data_dir}")
-        print(f"Image size: {img_size}, Batch size: {batch_size}")
+        print(f"✅ Model initialized")
+        print(f"   Parameters: {sum(p.numel() for p in self.model.parameters()):,}")
+        print(f"   Output directory: {self.output_dir}")
+        print(f"   Data directory: {self.data_dir}")
+        print(f"   Image size: {img_size}, Batch size: {batch_size}")
+        print(f"   Num classes: {num_classes}")
     
     def train_epoch(self, train_loader, epoch):
         self.model.train()
@@ -172,7 +171,9 @@ class GeospatialViTTrainer:
                 'lr': f'{current_lr:.6f}'
             })
         
-        return total_loss / len(train_loader), 100. * correct / total
+        epoch_loss = total_loss / len(train_loader)
+        epoch_acc = 100. * correct / total
+        return epoch_loss, epoch_acc
     
     def validate(self, val_loader):
         self.model.eval()
@@ -205,11 +206,12 @@ class GeospatialViTTrainer:
         best_acc = 0
         start_time = time.time()
         
-        print(f"\nStarting training for {self.epochs} epochs")
-        print(f"Device: {self.device}")
-        print(f"Mixed precision: {self.mixed_precision}")
-        print(f"Training samples: {len(train_loader.dataset)}")
-        print(f"Validation samples: {len(val_loader.dataset)}")
+        print(f"\n🚀 Starting training for {self.epochs} epochs")
+        print(f"   Device: {self.device}")
+        print(f"   Mixed precision: {self.mixed_precision}")
+        print(f"   Training samples: {len(train_loader.dataset)}")
+        print(f"   Validation samples: {len(val_loader.dataset)}")
+        print(f"   Learning rate: {self.lr}")
         
         for epoch in range(self.epochs):
             # Train
@@ -222,15 +224,15 @@ class GeospatialViTTrainer:
             self.scheduler.step()
             
             # Print epoch summary
-            print(f"\nEpoch {epoch+1}/{self.epochs}:")
-            print(f"  Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
-            print(f"  Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
+            print(f"\n📊 Epoch {epoch+1}/{self.epochs}:")
+            print(f"   Train Loss: {train_loss:.4f}, Train Acc: {train_acc:.2f}%")
+            print(f"   Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.2f}%")
             
             # Save best model
             if val_acc > best_acc:
                 best_acc = val_acc
                 self.save_checkpoint('best_model.pth', epoch, val_acc)
-                print(f"  ✅ Saved best model (acc: {val_acc:.2f}%)")
+                print(f"   💾 Saved best model (acc: {val_acc:.2f}%)")
             
             # Save periodic checkpoint
             if (epoch + 1) % self.save_interval == 0:
@@ -238,12 +240,15 @@ class GeospatialViTTrainer:
         
         # Training complete
         training_time = time.time() - start_time
-        print(f"\n{'='*50}")
-        print(f"Training complete!")
-        print(f"Best validation accuracy: {best_acc:.2f}%")
-        print(f"Total training time: {training_time:.2f} seconds")
-        print(f"Models saved in: {self.output_dir}")
-        print(f"{'='*50}")
+        print(f"\n{'='*60}")
+        print(f"🎉 Training complete!")
+        print(f"   Best validation accuracy: {best_acc:.2f}%")
+        print(f"   Total training time: {training_time:.2f} seconds")
+        print(f"   Models saved in: {self.output_dir}")
+        print(f"{'='*60}")
+        
+        # Save final model
+        self.save_checkpoint('final_model.pth', self.epochs-1, best_acc)
     
     def save_checkpoint(self, filename, epoch, acc):
         checkpoint = {
@@ -276,8 +281,8 @@ def main(config_path):
         batch_size = config.get('batch_size', 8)
         img_size = config.get('img_size', 256)
     
-    print(f"Creating dataloaders from: {data_dir}")
-    print(f"Batch size: {batch_size}, Image size: {img_size}")
+    print(f"📂 Loading data from: {data_dir}")
+    print(f"   Batch size: {batch_size}, Image size: {img_size}")
     
     train_loader, val_loader = create_drone_dataloaders(
         data_dir=data_dir,
