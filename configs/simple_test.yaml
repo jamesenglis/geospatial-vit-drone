@@ -1,0 +1,19 @@
+# Super simple test configuration
+
+data_dir: "data/drone_samples"
+img_size: 128  # Very small for quick testing
+batch_size: 2  # Tiny batch for M1
+num_classes: 10
+
+model:
+  embed_dim: 96  # Very small model
+  depth: 2
+  num_heads: 4
+
+training:
+  epochs: 2  # Just 2 epochs
+  lr: 0.001
+  mixed_precision: true
+
+logging:
+  output_dir: "experiments/simple_test"

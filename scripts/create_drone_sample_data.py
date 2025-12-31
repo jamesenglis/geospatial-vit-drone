@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+"""
+Generate test data for Geospatial ViT
+"""
 import numpy as np
 from PIL import Image
 import os
@@ -39,10 +43,10 @@ def create_realistic_drone_images(output_dir="data/drone_samples", num_images=50
         if class_name == 'residential':
             # Residential: grid of houses
             img[:, :, :] = 180  # Light gray background
-            # Add houses
-            for x in range(50, img_size, 100):
-                for y in range(50, img_size, 100):
-                    # House body
+            # Add houses (simpler implementation)
+            for x in range(50, img_size-30, 100):
+                for y in range(50, img_size-40, 100):
+                    # House body (simpler rectangle)
                     img[x:x+30, y:y+40, 0] = 200  # Red roof
                     img[x:x+30, y:y+40, 1] = 150  # Green tint
                     img[x:x+30, y:y+40, 2] = 100  # Blue tint
@@ -53,39 +57,53 @@ def create_realistic_drone_images(output_dir="data/drone_samples", num_images=50
             img[:, :, 0] = np.random.randint(50, 150, (img_size, img_size))   # Brown earth
             # Add field boundaries
             for x in range(0, img_size, 64):
-                img[x:x+2, :, :] = 50  # Dark boundaries
+                if x+2 < img_size:
+                    img[x:x+2, :, :] = 50  # Dark boundaries
             for y in range(0, img_size, 64):
-                img[:, y:y+2, :] = 50
+                if y+2 < img_size:
+                    img[:, y:y+2, :] = 50
                 
         elif class_name == 'forest':
             # Forest: green with tree patterns
             base_green = np.random.randint(50, 100, (img_size, img_size))
             img[:, :, 1] = base_green + np.random.randint(0, 50, (img_size, img_size))
-            # Add tree crowns (circles)
+            # Add tree crowns (simpler implementation)
             for _ in range(20):
-                cx = np.random.randint(20, img_size-20)
-                cy = np.random.randint(20, img_size-20)
+                cx = np.random.randint(30, img_size-30)
+                cy = np.random.randint(30, img_size-30)
                 radius = np.random.randint(10, 30)
-                # Draw circle
-                y, x = np.ogrid[-radius:radius, -radius:radius]
-                mask = x*x + y*y <= radius*radius
-                img[cx-radius:cx+radius, cy-radius:cy+radius, 1][mask] = 200
+                # Ensure bounds
+                x_start = max(0, cx - radius)
+                x_end = min(img_size, cx + radius)
+                y_start = max(0, cy - radius)
+                y_end = min(img_size, cy + radius)
+                
+                if x_end > x_start and y_end > y_start:
+                    # Simple circle approximation
+                    for x in range(x_start, x_end):
+                        for y in range(y_start, y_end):
+                            if (x - cx)**2 + (y - cy)**2 <= radius**2:
+                                img[x, y, 1] = 200  # Bright green
                 
         elif class_name == 'water':
             # Water: blue with wave patterns
             img[:, :, 2] = np.random.randint(100, 200, (img_size, img_size))  # Blue water
             # Add wave patterns
             for x in range(0, img_size, 20):
-                img[x:x+2, :, 2] = np.random.randint(150, 255, img_size)
+                if x+2 < img_size:
+                    img[x:x+2, :, 2] = np.random.randint(150, 255, img_size)
                 
         elif class_name == 'road':
             # Road: gray with lane markings
             img[:, :, :] = 100  # Gray asphalt
             # Add road lines
             for y in range(0, img_size, 40):
-                img[:, y:y+5, :] = 255  # White lines
+                if y+5 < img_size:
+                    img[:, y:y+5, :] = 255  # White lines
             # Add center line
-            img[img_size//2-2:img_size//2+2, :, 0] = 255  # Yellow center
+            center = img_size // 2
+            if center-2 >= 0 and center+2 < img_size:
+                img[center-2:center+2, :, 0] = 255  # Yellow center
                 
         else:
             # Generic pattern for other classes
@@ -94,9 +112,9 @@ def create_realistic_drone_images(output_dir="data/drone_samples", num_images=50
             if class_name == 'commercial':
                 img[:, :, 0] = np.clip(img[:, :, 0] + 50, 0, 255)  # More red
             elif class_name == 'industrial':
-                img[:, :, :] = np.clip(img[:, :, :] - 50, 0, 255)  # Darker
+                img = np.clip(img - 50, 0, 255)  # Darker
         
-        # Add some noise for realism
+        # Add some noise for realism (within bounds)
         noise = np.random.randint(-20, 20, (img_size, img_size, 3), dtype=np.int16)
         img = np.clip(img.astype(np.int16) + noise, 0, 255).astype(np.uint8)
         
@@ -144,4 +162,6 @@ def create_realistic_drone_images(output_dir="data/drone_samples", num_images=50
     return output_path
 
 if __name__ == "__main__":
-    create_realistic_drone_images(num_images=100)
+    # Create a smaller test set first
+    print("Generating sample drone data...")
+    create_realistic_drone_images(num_images=20)

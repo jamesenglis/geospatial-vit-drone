@@ -8,7 +8,7 @@ with open("requirements.txt", "r", encoding="utf-8") as fh:
 
 setup(
     name="geospatial-vit",
-    version="0.1.0",
+    version="1.0.0",
     author="James Englis",
     author_email="your-email@example.com",
     description="Vision Transformer for Geospatial Drone Imagery",
@@ -18,7 +18,7 @@ setup(
     package_dir={"": "src"},
     packages=find_packages(where="src"),
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Scientific/Engineering :: Image Processing",
